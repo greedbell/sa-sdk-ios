@@ -22,10 +22,6 @@
 #endif
 
 #import <Availability.h>
-#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_8_0 && (defined SENSORS_ANALYTICS_DISABLE_UIWEBVIEW)
-#error disable UIWebView and use WKWebView, minimum deployment target is 8.0
-#endif
-
 #import <objc/runtime.h>
 #include <sys/sysctl.h>
 #include <stdlib.h>
@@ -57,10 +53,7 @@
      #import "SAKeyChainItemWrapper.h"
 #endif
 
-#ifdef SENSORS_ANALYTICS_DISABLE_UIWEBVIEW
 #import <WebKit/WebKit.h>
-#endif
-
 #import "SASDKRemoteConfig.h"
 #import "SADeviceOrientationManager.h"
 #import "SALocationManager.h"
@@ -208,10 +201,8 @@ static SensorsAnalyticsSDK *sharedInstance = nil;
 @property (nonatomic, strong) SAGPSLocationConfig *locationConfig;
 #endif
 
-#ifdef SENSORS_ANALYTICS_DISABLE_UIWEBVIEW
 @property (nonatomic, strong) WKWebView *wkWebView;
 @property (nonatomic, strong) dispatch_group_t loadUAGroup;
-#endif
 
 @property (nonatomic, copy) void(^reqConfigBlock)(BOOL success , NSDictionary *configDict);
 @property (nonatomic, assign) NSUInteger pullSDKConfigurationRetryMaxCount;
@@ -900,26 +891,6 @@ static SensorsAnalyticsSDK *sharedInstance = nil;
         
          //解析参数
         NSMutableDictionary *paramsDic = [[SANetwork queryItemsWithURLString:urlstr] mutableCopy];
-
-#ifdef SENSORS_ANALYTICS_DISABLE_UIWEBVIEW
-        NSAssert(![webView isKindOfClass:NSClassFromString(@"UIWebView")], @"当前集成方式已禁用 UIWebView！❌");
-#else
-
-        if ([webView isKindOfClass:[UIWebView class]]) {//UIWebView
-            SADebug(@"showUpWebView: UIWebView");
-            if ([urlstr rangeOfString:SA_JS_GET_APP_INFO_SCHEME].location != NSNotFound) {
-                [webView stringByEvaluatingJavaScriptFromString:js];
-            } else if ([urlstr rangeOfString:SA_JS_TRACK_EVENT_NATIVE_SCHEME].location != NSNotFound) {
-                if ([paramsDic count] > 0) {
-                    NSString *eventInfo = [paramsDic objectForKey:SA_EVENT_NAME];
-                    if (eventInfo != nil) {
-                        NSString* encodedString = [eventInfo stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-                        [self trackFromH5WithEvent:encodedString enableVerify:enableVerify];
-                    }
-                }
-            }
-        } else
-#endif
         if (wkWebViewClass && [webView isKindOfClass:wkWebViewClass]) {//WKWebView
             SADebug(@"showUpWebView: WKWebView");
             if ([urlstr rangeOfString:SA_JS_GET_APP_INFO_SCHEME].location != NSNotFound) {
@@ -941,7 +912,7 @@ static SensorsAnalyticsSDK *sharedInstance = nil;
                 }
             }
         } else {
-            SADebug(@"showUpWebView: not UIWebView or WKWebView");
+            SADebug(@"showUpWebView: not WKWebView");
         }
     } @catch (NSException *exception) {
         SAError(@"%@: %@", self, exception);
