@@ -419,7 +419,6 @@ static SensorsAnalyticsSDK *sharedInstance = nil;
     if (self.userAgent) {
         return completion(self.userAgent);
     }
-#ifdef SENSORS_ANALYTICS_DISABLE_UIWEBVIEW
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self.wkWebView) {
@@ -444,13 +443,6 @@ static SensorsAnalyticsSDK *sharedInstance = nil;
             }];
         }
     });
-#else
-    sensorsdata_dispatch_main_safe_sync(^{
-        UIWebView *webView = [[UIWebView alloc] initWithFrame:CGRectZero];
-        self.userAgent = [webView stringByEvaluatingJavaScriptFromString:@"navigator.userAgent"];
-        completion(self.userAgent);
-    });
-#endif
 }
 
 - (BOOL)shouldTrackViewController:(UIViewController *)controller ofType:(SensorsAnalyticsAutoTrackEventType)type {
