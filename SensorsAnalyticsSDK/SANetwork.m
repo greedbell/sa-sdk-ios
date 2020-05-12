@@ -77,20 +77,7 @@ typedef NSURLSessionAuthChallengeDisposition (^SAURLSessionTaskDidReceiveAuthent
 #pragma mark - property
 - (void)setServerURL:(NSURL *)serverURL {
     _originServerURL = serverURL;
-    if (self.debugMode == SensorsAnalyticsDebugOff || serverURL == nil) {
-        _serverURL = serverURL;
-    } else {
-        // 将 Server URI Path 替换成 Debug 模式的 '/debug'
-        if (serverURL.lastPathComponent.length > 0) {
-            serverURL = [serverURL URLByDeletingLastPathComponent];
-        }
-        NSURL *url = [serverURL URLByAppendingPathComponent:@"debug"];
-        if ([url.host rangeOfString:@"_"].location != NSNotFound) { //包含下划线日志提示
-            NSString * referenceURL = @"https://en.wikipedia.org/wiki/Hostname";
-            SALog(@"Server url:%@ contains '_'  is not recommend,see details:%@", serverURL.absoluteString, referenceURL);
-        }
-        _serverURL = url;
-    }
+    _serverURL = serverURL;
 }
 
 - (void)setDebugMode:(SensorsAnalyticsDebugMode)debugMode {
